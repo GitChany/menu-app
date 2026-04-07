@@ -138,20 +138,44 @@ const TIPS = {
 };
 
 export default function MenuRecommender() {
+  const [isKakao, setIsKakao] = useState(false);
+
   useEffect(() => {
     const ua = navigator.userAgent || '';
-    if (/KAKAOTALK/i.test(ua)) {
-      const currentUrl = window.location.href;
-      if (/iPhone|iPad|iPod/i.test(ua)) {
-        window.location.href = currentUrl.replace(/^https?:\/\//, 'safari-https://');
-        setTimeout(() => {
-          window.location.href = 'https://browser.kakao.com/close';
-        }, 500);
-      } else {
-        window.location.href = 'intent://' + currentUrl.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
-      }
+    if (/KAKAOTALK/i.test(ua) && /iPhone|iPad|iPod/i.test(ua)) {
+      setIsKakao(true);
+    } else if (/KAKAOTALK/i.test(ua)) {
+      window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(window.location.href);
     }
   }, []);
+
+  if (isKakao) {
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        background: "linear-gradient(165deg, #0F0F1A 0%, #1A1A2E 40%, #16213E 100%)",
+        fontFamily: "-apple-system, sans-serif", color: "#E8E8ED",
+        padding: 20, textAlign: "center",
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🍽️</div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>오늘 뭐 먹지?</h2>
+        <p style={{ fontSize: 14, color: "#888", marginBottom: 28 }}>
+          아이폰인 경우 Safari에서 열어야 정상 동작해요!
+        </p>
+        <button onClick={() => {
+          window.location.href = window.location.href;
+        }} style={{
+          padding: "14px 32px", borderRadius: 14,
+          background: "linear-gradient(135deg, #FF6B35, #FF8F5E)",
+          border: "none", color: "#fff", fontSize: 15, fontWeight: 700,
+          cursor: "pointer",
+        }}>
+          오른쪽 하단 ··· → Safari로 열기
+        </button>
+      </div>
+    );
+  }
   const [step, setStep] = useState(0);
   const [mood, setMood] = useState(null);
   const [situation, setSituation] = useState(null);
