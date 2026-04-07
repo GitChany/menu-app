@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 
 const CATEGORIES = {
   korean: { label: "한식", emoji: "🍚", color: "#E8453C" },
@@ -147,7 +147,6 @@ export default function MenuRecommender() {
   const [chosen, setChosen] = useState(null);
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
-  const confettiRef = useRef(null);
 
   const reset = () => {
     setStep(0);
@@ -230,14 +229,19 @@ export default function MenuRecommender() {
           0%{transform:translateY(-10px) rotate(0deg);opacity:1}
           100%{transform:translateY(120vh) rotate(720deg);opacity:0}
         }
-        .mood-btn { transition: all 0.25s cubic-bezier(.4,0,.2,1); cursor: pointer; }
-        .mood-btn:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+        .mood-btn { transition: all 0.25s cubic-bezier(.4,0,.2,1); cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        
         .mood-btn:active { transform: translateY(0) scale(0.98); }
-        .card-reveal { cursor: pointer; transition: all 0.35s cubic-bezier(.4,0,.2,1); }
-        .card-reveal:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
-        .choose-btn { transition: all 0.2s ease; cursor: pointer; }
-        .choose-btn:hover { transform: scale(1.06); filter: brightness(1.15); }
+        .card-reveal { cursor: pointer; transition: all 0.35s cubic-bezier(.4,0,.2,1); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        
+        .choose-btn { transition: all 0.2s ease; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        
         .choose-btn:active { transform: scale(0.96); }
+        @media (hover: hover) {
+          .mood-btn:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+          .card-reveal:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
+          .choose-btn:hover { transform: scale(1.06); filter: brightness(1.15); }
+        }
       `}</style>
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "20px 20px 40px" }}>
