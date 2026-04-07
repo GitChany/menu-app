@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect  } from "react";
 
 const CATEGORIES = {
   korean: { label: "한식", emoji: "🍚", color: "#E8453C" },
@@ -138,6 +138,12 @@ const TIPS = {
 };
 
 export default function MenuRecommender() {
+  useEffect(() => {
+    const ua = navigator.userAgent || '';
+    if (/KAKAOTALK/i.test(ua)) {
+      window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(window.location.href);
+    }
+  }, []);
   const [step, setStep] = useState(0);
   const [mood, setMood] = useState(null);
   const [situation, setSituation] = useState(null);
