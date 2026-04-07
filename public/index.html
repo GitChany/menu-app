@@ -1,43 +1,469 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta property="og:title" content="오늘 뭐 먹지?">
+<meta property="og:description" content="AI가 추천하는 오늘의 메뉴 🍽️">
+<title>오늘 뭐 먹지?</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  min-height: 100vh;
+  background: linear-gradient(165deg, #0F0F1A 0%, #1A1A2E 40%, #16213E 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  color: #E8E8ED;
+  overflow-x: hidden;
+}
+.container { max-width: 480px; margin: 0 auto; padding: 20px 20px 40px; position: relative; z-index: 1; }
+.header { text-align: center; padding: 28px 0 20px; }
+.header-emoji { font-size: 42px; margin-bottom: 6px; }
+.header-title {
+  font-size: 26px; font-weight: 800;
+  background: linear-gradient(135deg, #FF6B35, #FFB347, #FF6B35);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+.header-sub { font-size: 13px; color: #888; margin-top: 6px; }
+.section-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; text-align: center; color: #ccc; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 18px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: pointer; touch-action: manipulation;
+  transition: all 0.2s ease;
+  -webkit-appearance: none; appearance: none;
+  color: #ddd; font-size: 13px; font-weight: 600;
+  outline: none;
+}
+.btn:active { transform: scale(0.96); background: rgba(255,255,255,0.08); }
+.btn-emoji { font-size: 30px; pointer-events: none; }
+.btn-label { pointer-events: none; }
+.mood-badge {
+  text-align: center; margin-bottom: 20px;
+  background: rgba(255,107,53,0.08); border-radius: 12px; padding: 10px 16px;
+  border: 1px solid rgba(255,107,53,0.15);
+  font-size: 13px; color: #FF6B35;
+}
+.back-btn {
+  display: block; margin: 20px auto 0; background: none; border: none;
+  color: #666; font-size: 13px; cursor: pointer; padding: 8px 16px;
+  -webkit-appearance: none; touch-action: manipulation;
+}
+.tags {
+  text-align: center; margin-bottom: 8px;
+}
+.tag {
+  font-size: 12px; color: #888;
+  background: rgba(255,255,255,0.04); padding: 5px 14px;
+  border-radius: 20px; display: inline-block;
+}
+.spinner { text-align: center; padding: 60px 0; }
+.spinner-emoji { font-size: 50px; animation: spinIn 1.5s ease-out; }
+.spinner-text { font-size: 15px; color: #aaa; font-weight: 500; margin-top: 20px; }
+.spinner-bar {
+  width: 160px; height: 3px; background: rgba(255,255,255,0.06);
+  border-radius: 2px; margin: 16px auto; overflow: hidden;
+}
+.spinner-fill {
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, #FF6B35, #FFB347);
+  border-radius: 2px; animation: shimmer 1s linear infinite;
+  background-size: 200% auto;
+}
+.cards { display: flex; flex-direction: column; gap: 14px; }
+.card {
+  border-radius: 18px; overflow: hidden; cursor: pointer;
+  touch-action: manipulation; transition: all 0.2s ease;
+  -webkit-appearance: none;
+}
+.card:active { transform: scale(0.98); }
+.card-hidden {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 28px 20px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  border-radius: 18px;
+}
+.card-hidden-emoji { font-size: 36px; animation: pulse 2s ease-in-out infinite; }
+.card-hidden-text { font-size: 15px; color: #888; font-weight: 500; }
+.card-revealed {
+  padding: 22px 20px;
+  display: flex; align-items: center; gap: 16px;
+  border-radius: 18px;
+  animation: cardFlip 0.5s ease-out;
+}
+.card-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; flex-shrink: 0;
+}
+.card-info { flex: 1; min-width: 0; }
+.card-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.card-cat { font-size: 11px; font-weight: 600; }
+.card-choose {
+  color: #fff; font-size: 11px; font-weight: 700;
+  padding: 6px 12px; border-radius: 10px; white-space: nowrap;
+}
+.result-center { text-align: center; padding: 30px 0; animation: bounceIn 0.5s ease-out; }
+.result-circle {
+  width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center; font-size: 48px;
+}
+.result-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; color: #fff; }
+.result-menu { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+.result-cat {
+  font-size: 12px; color: #888;
+  background: rgba(255,255,255,0.05); padding: 4px 14px;
+  border-radius: 12px; display: inline-block;
+}
+.result-tip { font-size: 14px; color: #999; margin-top: 20px; }
+.retry-btn {
+  margin-top: 28px; padding: 14px 40px; border-radius: 14px;
+  background: linear-gradient(135deg, #FF6B35, #FF8F5E);
+  border: none; color: #fff; font-size: 15px; font-weight: 700;
+  box-shadow: 0 8px 24px rgba(255,107,53,0.3);
+  cursor: pointer; touch-action: manipulation;
+  -webkit-appearance: none;
+}
+.retry-btn:active { transform: scale(0.96); }
+.reset-btn {
+  display: block; margin: 24px auto 0; background: none;
+  border: 1px solid rgba(255,255,255,0.1); color: #888;
+  padding: 10px 24px; border-radius: 12px; font-size: 13px;
+  cursor: pointer; touch-action: manipulation;
+  -webkit-appearance: none;
+}
+.confetti {
+  position: fixed; width: 8px; height: 8px;
+  top: -10px; pointer-events: none; z-index: 10;
+}
+.hidden { display: none; }
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes spinIn { 0%{transform:rotate(0) scale(0.7);opacity:0} 100%{transform:rotate(720deg) scale(1);opacity:1} }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+@keyframes cardFlip { 0%{transform:rotateY(0) scale(0.95)} 50%{transform:rotateY(90deg) scale(1)} 100%{transform:rotateY(0) scale(1)} }
+@keyframes bounceIn { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+@keyframes confettiFall {
+  0%{transform:translateY(-10px) rotate(0);opacity:1}
+  100%{transform:translateY(120vh) rotate(720deg);opacity:0}
+}
+</style>
+</head>
+<body>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+<div class="container">
+  <div class="header">
+    <div class="header-emoji">🍽️</div>
+    <h1 class="header-title">오늘 뭐 먹지?</h1>
+    <p class="header-sub">AI가 딱 맞는 메뉴를 추천해드려요</p>
+  </div>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+  <!-- Step 0: Mood -->
+  <div id="step0">
+    <h2 class="section-title">지금 어떤 기분이에요?</h2>
+    <div class="grid">
+      <div class="btn" onclick="selectMood('comfort')"><span class="btn-emoji">🫂</span><span class="btn-label">따뜻하고 든든한</span></div>
+      <div class="btn" onclick="selectMood('light')"><span class="btn-emoji">🥗</span><span class="btn-label">가볍고 건강한</span></div>
+      <div class="btn" onclick="selectMood('spicy')"><span class="btn-emoji">🌶️</span><span class="btn-label">매콤하고 자극적인</span></div>
+      <div class="btn" onclick="selectMood('special')"><span class="btn-emoji">✨</span><span class="btn-label">특별하고 색다른</span></div>
+      <div class="btn" onclick="selectMood('quick')"><span class="btn-emoji">⚡</span><span class="btn-label">빠르고 간편한</span></div>
+      <div class="btn" onclick="selectMood('sweet')"><span class="btn-emoji">🍰</span><span class="btn-label">달콤한 디저트</span></div>
+    </div>
+  </div>
+
+  <!-- Step 1: Situation -->
+  <div id="step1" class="hidden">
+    <div class="mood-badge" id="moodBadge"></div>
+    <h2 class="section-title">누구와 함께 먹나요?</h2>
+    <div class="grid">
+      <div class="btn" onclick="selectSituation('alone')"><span class="btn-emoji">🧑</span><span class="btn-label">혼밥</span></div>
+      <div class="btn" onclick="selectSituation('date')"><span class="btn-emoji">💕</span><span class="btn-label">데이트</span></div>
+      <div class="btn" onclick="selectSituation('friends')"><span class="btn-emoji">🎉</span><span class="btn-label">친구 모임</span></div>
+      <div class="btn" onclick="selectSituation('family')"><span class="btn-emoji">👨‍👩‍👧‍👦</span><span class="btn-label">가족 식사</span></div>
+      <div class="btn" onclick="selectSituation('business')"><span class="btn-emoji">💼</span><span class="btn-label">회식/비즈니스</span></div>
+      <div class="btn" onclick="selectSituation('delivery')"><span class="btn-emoji">🛵</span><span class="btn-label">배달</span></div>
+    </div>
+    <button class="back-btn" onclick="goBack()">← 다시 고르기</button>
+  </div>
+
+  <!-- Step 2: Loading -->
+  <div id="step2" class="hidden">
+    <div class="tags"><span class="tag" id="tagInfo"></span></div>
+    <div class="spinner">
+      <div class="spinner-emoji">🎰</div>
+      <p class="spinner-text">AI가 메뉴를 고르는 중...</p>
+      <div class="spinner-bar"><div class="spinner-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- Step 3: Cards -->
+  <div id="step3" class="hidden">
+    <div class="tags"><span class="tag" id="tagInfo2"></span></div>
+    <h2 class="section-title">카드를 터치해서 메뉴를 확인하세요!</h2>
+    <div class="cards" id="cardsArea"></div>
+    <button class="reset-btn" onclick="resetAll()">← 처음부터 다시</button>
+  </div>
+
+  <!-- Step 4: Result -->
+  <div id="step4" class="hidden">
+    <div class="result-center" id="resultArea"></div>
+  </div>
+</div>
+
+<script>
+var CATEGORIES = {
+  korean: { label: '한식', emoji: '🍚', color: '#E8453C' },
+  chinese: { label: '중식', emoji: '🥟', color: '#D4A017' },
+  japanese: { label: '일식', emoji: '🍣', color: '#2E86AB' },
+  western: { label: '양식', emoji: '🍝', color: '#6B4226' },
+  snack: { label: '분식', emoji: '🧇', color: '#FF6B35' },
+  fast: { label: '패스트푸드', emoji: '🍔', color: '#28A745' },
+  asian: { label: '동남아', emoji: '🍜', color: '#9B59B6' },
+  cafe: { label: '카페/브런치', emoji: '☕', color: '#C2855A' }
+};
+
+var MOODS = {
+  comfort: { label: '따뜻하고 든든한', emoji: '🫂' },
+  light: { label: '가볍고 건강한', emoji: '🥗' },
+  spicy: { label: '매콤하고 자극적인', emoji: '🌶️' },
+  special: { label: '특별하고 색다른', emoji: '✨' },
+  quick: { label: '빠르고 간편한', emoji: '⚡' },
+  sweet: { label: '달콤한 디저트', emoji: '🍰' }
+};
+
+var SITUATIONS = {
+  alone: { label: '혼밥', emoji: '🧑' },
+  date: { label: '데이트', emoji: '💕' },
+  friends: { label: '친구 모임', emoji: '🎉' },
+  family: { label: '가족 식사', emoji: '👨‍👩‍👧‍👦' },
+  business: { label: '회식/비즈니스', emoji: '💼' },
+  delivery: { label: '배달', emoji: '🛵' }
+};
+
+var MENU_DB = {
+  korean: {
+    comfort: ['된장찌개 + 공깃밥', '김치찜', '갈비찜', '순두부찌개', '부대찌개', '설렁탕', '감자탕', '삼계탕', '육개장', '콩나물국밥'],
+    light: ['비빔밥', '냉면', '잡채', '두부 샐러드', '청국장', '보리밥 정식', '묵사발', '도토리묵'],
+    spicy: ['떡볶이', '낙곱새', '불닭', '매운 갈비찜', '닭볶음탕', '쭈꾸미 볶음', '김치찌개', '차돌 된장찌개'],
+    special: ['한우 구이', '전복죽', '궁중떡볶이', '해물탕', '장어구이', '양념갈비', '꽃게찜'],
+    quick: ['김밥', '제육볶음 도시락', '유부초밥', '계란말이 덮밥', '참치김치찌개'],
+    sweet: ['호떡', '약과', '인절미', '꿀떡', '수정과', '식혜']
+  },
+  chinese: {
+    comfort: ['짜장면', '짬뽕', '마파두부', '양장피', '볶음밥'],
+    light: ['유산슬', '새우볶음밥', '잡채밥', '중화냉면'],
+    spicy: ['마라탕', '마라샹궈', '고추잡채', '라조기', '사천탕면'],
+    special: ['꿔바로우', '양꼬치', '베이징덕', 'XO볶음밥', '해물누룽지탕'],
+    quick: ['군만두', '볶음밥', '짜장면', '짬뽕밥'],
+    sweet: ['탕후루', '에그타르트', '망고푸딩']
+  },
+  japanese: {
+    comfort: ['라멘', '카츠동', '우동', '규동', '오야코동', '카레라이스'],
+    light: ['초밥', '연어 사시미', '소바', '에다마메', '샤브샤브'],
+    spicy: ['매운 라멘', '와사비 롤', '매운 카레', '스파이시 참치 롤'],
+    special: ['오마카세', '이자카야 코스', '장어덮밥', '스키야키', '철판구이'],
+    quick: ['규동', '카레라이스', '오니기리', '유부초밥'],
+    sweet: ['모찌', '다이후쿠', '타이야키', '말차 아이스크림', '카스테라']
+  },
+  western: {
+    comfort: ['스테이크', '파스타', '리조또', '그라탕', '함박스테이크', '미트볼 파스타'],
+    light: ['시저 샐러드', '카프레제', '가스파초', '연어 스테이크', '그릭 샐러드'],
+    spicy: ['아라비아타', '페퍼로니 피자', '핫윙', '칠리 콘 카르네'],
+    special: ['티본 스테이크', '랍스터', '트러플 파스타', '오소부코', '프렌치 코스'],
+    quick: ['까르보나라', '마르게리타 피자', 'BLT 샌드위치', '피쉬 앤 칩스'],
+    sweet: ['티라미수', '크렘 브륄레', '팬케이크', '초콜릿 케이크', '애플파이']
+  },
+  snack: {
+    comfort: ['라볶이', '순대국', '어묵탕', '칼국수', '수제비'],
+    light: ['쫄면', '비빔냉면', '야채 김밥', '두부 김치'],
+    spicy: ['신전 떡볶이', '매운 라볶이', '불닭 만두', '매운 어묵탕'],
+    special: ['로제 떡볶이', '치즈 김밥', '모듬 전', '해물파전'],
+    quick: ['컵라면 + 삼각김밥', '즉석 떡볶이', '토스트', '핫도그'],
+    sweet: ['붕어빵', '계란빵', '와플', '츄러스']
+  },
+  fast: {
+    comfort: ['치킨', '햄버거', '감자튀김', '치킨 너겟'],
+    light: ['서브웨이 샌드위치', '포케 볼', '랩', '그릴드 치킨 버거'],
+    spicy: ['불닭 버거', '양념치킨', '핫 윙', '스파이시 너겟'],
+    special: ['수제 버거', '풀드포크 버거', '트러플 감자튀김'],
+    quick: ['빅맥 세트', '치킨 텐더', '타코', '핫도그'],
+    sweet: ['맥플러리', '선데이', '츄러스', '시나몬 스틱']
+  },
+  asian: {
+    comfort: ['쌀국수(포)', '카오 팟', '팟타이', '나시고렝', '그린커리'],
+    light: ['월남쌈', '반미', '솜탐', '스프링롤', '분짜'],
+    spicy: ['똠양꿍', '레드커리', '싸테이', '라크사', '매운 분짜'],
+    special: ['코스 태국 요리', '반쎄오', '카오소이', '렌당'],
+    quick: ['쌀국수', '반미 샌드위치', '볶음밥', '팟타이'],
+    sweet: ['망고 찹쌀밥', '코코넛 아이스크림', '로티']
+  },
+  cafe: {
+    comfort: ['브런치 플레이트', '에그 베네딕트', '프렌치토스트', '수프 + 빵'],
+    light: ['아사이볼', '그래놀라 요거트', '샐러드 플레이트', '스무디볼'],
+    spicy: ['칠리 에그 토스트', '매콤 치아바타'],
+    special: ['애프터눈 티 세트', '트러플 크로크무슈', '리코타 팬케이크'],
+    quick: ['크로와상 + 커피', '베이글 샌드위치', '토스트 세트'],
+    sweet: ['크로플', '당근 케이크', '스콘 세트', '마카롱', '크레페']
+  }
+};
+
+var TIPS = {
+  comfort: '오늘은 마음이 따뜻해지는 메뉴가 좋겠어요 🤗',
+  light: '건강하게 한 끼, 좋은 선택이에요 💪',
+  spicy: '매운 맛으로 스트레스 해소! 🔥',
+  special: '특별한 날엔 특별한 메뉴를 🎊',
+  quick: '시간이 없을 땐 빠르게! ⏱️',
+  sweet: '달콤함이 필요한 순간이네요 🍬'
+};
+
+var currentMood = '';
+var currentSituation = '';
+var recommendations = [];
+var revealed = [false, false, false];
+
+function showStep(n) {
+  document.getElementById('step0').className = (n === 0) ? '' : 'hidden';
+  document.getElementById('step1').className = (n === 1) ? '' : 'hidden';
+  document.getElementById('step2').className = (n === 2) ? '' : 'hidden';
+  document.getElementById('step3').className = (n === 3) ? '' : 'hidden';
+  document.getElementById('step4').className = (n === 4) ? '' : 'hidden';
+}
+
+function selectMood(mood) {
+  currentMood = mood;
+  var m = MOODS[mood];
+  document.getElementById('moodBadge').innerHTML = m.emoji + ' ' + m.label + ' 기분이군요!';
+  showStep(1);
+  window.scrollTo(0, 0);
+}
+
+function selectSituation(sit) {
+  currentSituation = sit;
+  var m = MOODS[currentMood];
+  var s = SITUATIONS[sit];
+  var tagText = m.emoji + ' ' + m.label + ' · ' + s.emoji + ' ' + s.label;
+  document.getElementById('tagInfo').innerHTML = tagText;
+  document.getElementById('tagInfo2').innerHTML = tagText;
+  showStep(2);
+  window.scrollTo(0, 0);
+
+  setTimeout(function() {
+    recommendations = getRecommendations(currentMood, currentSituation, 3);
+    revealed = [false, false, false];
+    renderCards();
+    showStep(3);
+  }, 1800);
+}
+
+function getRecommendations(mood, situation, count) {
+  var allMenus = [];
+  var catKeys = Object.keys(MENU_DB);
+
+  for (var c = 0; c < catKeys.length; c++) {
+    var cat = catKeys[c];
+    var items = (MENU_DB[cat] && MENU_DB[cat][mood]) ? MENU_DB[cat][mood] : [];
+    for (var i = 0; i < items.length; i++) {
+      var score = Math.random() * 10;
+      if (situation === 'alone' && (cat === 'fast' || cat === 'snack' || cat === 'korean')) score += 3;
+      if (situation === 'date' && (cat === 'japanese' || cat === 'western' || cat === 'cafe')) score += 4;
+      if (situation === 'friends' && (cat === 'korean' || cat === 'chinese' || cat === 'fast')) score += 3;
+      if (situation === 'family' && (cat === 'korean' || cat === 'chinese' || cat === 'japanese')) score += 3;
+      if (situation === 'business' && (cat === 'korean' || cat === 'japanese' || cat === 'western')) score += 4;
+      if (situation === 'delivery' && (cat === 'fast' || cat === 'chinese' || cat === 'korean')) score += 3;
+      allMenus.push({ name: items[i], category: cat, score: score });
+    }
+  }
+
+  allMenus.sort(function(a, b) { return b.score - a.score; });
+  var seen = {};
+  var result = [];
+  for (var j = 0; j < allMenus.length; j++) {
+    if (!seen[allMenus[j].name]) {
+      seen[allMenus[j].name] = true;
+      result.push(allMenus[j]);
+    }
+    if (result.length >= count) break;
+  }
+  return result;
+}
+
+function renderCards() {
+  var html = '';
+  for (var i = 0; i < recommendations.length; i++) {
+    var r = recommendations[i];
+    var cat = CATEGORIES[r.category];
+    if (!revealed[i]) {
+      html += '<div class="card" onclick="revealCard(' + i + ')">' +
+        '<div class="card-hidden">' +
+        '<span class="card-hidden-emoji">🎴</span>' +
+        '<span class="card-hidden-text">터치하여 ' + (i + 1) + '번 메뉴 확인</span>' +
+        '</div></div>';
+    } else {
+      html += '<div class="card" onclick="chooseMenu(' + i + ')">' +
+        '<div class="card-revealed" style="background:linear-gradient(135deg,' + cat.color + '18,' + cat.color + '08);border:1px solid ' + cat.color + '30;">' +
+        '<div class="card-icon" style="background:' + cat.color + '20;">' + cat.emoji + '</div>' +
+        '<div class="card-info">' +
+        '<div class="card-name">' + r.name + '</div>' +
+        '<div class="card-cat" style="color:' + cat.color + ';">' + cat.label + '</div>' +
+        '</div>' +
+        '<div class="card-choose" style="background:' + cat.color + ';">이거!</div>' +
+        '</div></div>';
+    }
+  }
+  document.getElementById('cardsArea').innerHTML = html;
+}
+
+function revealCard(index) {
+  revealed[index] = true;
+  renderCards();
+}
+
+function chooseMenu(index) {
+  var chosen = recommendations[index];
+  var cat = CATEGORIES[chosen.category];
+  var colors = ['#FF6B35', '#FFB347', '#2E86AB', '#E8453C', '#28A745', '#9B59B6'];
+
+  var confettiHtml = '';
+  for (var i = 0; i < 20; i++) {
+    var left = Math.floor(Math.random() * 100);
+    var dur = (2 + Math.random() * 2).toFixed(1);
+    var delay = (Math.random() * 0.8).toFixed(1);
+    var radius = Math.random() > 0.5 ? '50%' : '2px';
+    confettiHtml += '<div class="confetti" style="left:' + left + '%;border-radius:' + radius + ';background:' + colors[i % 6] + ';animation:confettiFall ' + dur + 's ease-in ' + delay + 's both;"></div>';
+  }
+
+  var html = confettiHtml +
+    '<div class="result-circle" style="background:linear-gradient(135deg,' + cat.color + '40,' + cat.color + '15);border:2px solid ' + cat.color + '60;">' + cat.emoji + '</div>' +
+    '<h2 class="result-title">오늘의 메뉴</h2>' +
+    '<p class="result-menu" style="color:' + cat.color + ';">' + chosen.name + '</p>' +
+    '<span class="result-cat">' + cat.label + '</span>' +
+    '<p class="result-tip">' + TIPS[currentMood] + '</p>' +
+    '<button class="retry-btn" onclick="resetAll()">다시 추천받기</button>';
+
+  document.getElementById('resultArea').innerHTML = html;
+  showStep(4);
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  showStep(0);
+  window.scrollTo(0, 0);
+}
+
+function resetAll() {
+  currentMood = '';
+  currentSituation = '';
+  recommendations = [];
+  revealed = [false, false, false];
+  showStep(0);
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
 </html>
