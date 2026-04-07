@@ -141,7 +141,15 @@ export default function MenuRecommender() {
   useEffect(() => {
     const ua = navigator.userAgent || '';
     if (/KAKAOTALK/i.test(ua)) {
-      window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(window.location.href);
+      const currentUrl = window.location.href;
+      if (/iPhone|iPad|iPod/i.test(ua)) {
+        window.location.href = currentUrl.replace(/^https?:\/\//, 'safari-https://');
+        setTimeout(() => {
+          window.location.href = 'https://browser.kakao.com/close';
+        }, 500);
+      } else {
+        window.location.href = 'intent://' + currentUrl.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+      }
     }
   }, []);
   const [step, setStep] = useState(0);
