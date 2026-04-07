@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect  } from "react";
+import { useState, useEffect } from "react";
 
 const CATEGORIES = {
   korean: { label: "한식", emoji: "🍚", color: "#E8453C" },
@@ -104,7 +104,6 @@ function getRecommendations(mood, situation, count = 3) {
     const items = MENU_DB[cat]?.[mood] || [];
     items.forEach((item) => {
       let score = Math.random() * 10;
-      // situation bonuses
       if (situation === "alone" && ["fast", "snack", "korean"].includes(cat)) score += 3;
       if (situation === "date" && ["japanese", "western", "cafe"].includes(cat)) score += 4;
       if (situation === "friends" && ["korean", "chinese", "fast"].includes(cat)) score += 3;
@@ -138,44 +137,8 @@ const TIPS = {
 };
 
 export default function MenuRecommender() {
-  const [isKakao, setIsKakao] = useState(false);
-
-  useEffect(() => {
-    const ua = navigator.userAgent || '';
-    if (/KAKAOTALK/i.test(ua) && /iPhone|iPad|iPod/i.test(ua)) {
-      setIsKakao(true);
-    } else if (/KAKAOTALK/i.test(ua)) {
-      window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(window.location.href);
-    }
-  }, []);
-
-  if (isKakao) {
-    return (
-      <div style={{
-        minHeight: "100vh", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        background: "linear-gradient(165deg, #0F0F1A 0%, #1A1A2E 40%, #16213E 100%)",
-        fontFamily: "-apple-system, sans-serif", color: "#E8E8ED",
-        padding: 20, textAlign: "center",
-      }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🍽️</div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>오늘 뭐 먹지?</h2>
-        <p style={{ fontSize: 14, color: "#888", marginBottom: 28 }}>
-          아이폰인 경우 Safari에서 열어야 정상 동작해요!
-        </p>
-        <button onClick={() => {
-          window.location.href = window.location.href;
-        }} style={{
-          padding: "14px 32px", borderRadius: 14,
-          background: "linear-gradient(135deg, #FF6B35, #FF8F5E)",
-          border: "none", color: "#fff", fontSize: 15, fontWeight: 700,
-          cursor: "pointer",
-        }}>
-          오른쪽 하단 ··· → Safari로 열기
-        </button>
-      </div>
-    );
-  }
+  // 모든 useState는 반드시 맨 위에!
+  const [isKakaoIOS, setIsKakaoIOS] = useState(false);
   const [step, setStep] = useState(0);
   const [mood, setMood] = useState(null);
   const [situation, setSituation] = useState(null);
@@ -185,6 +148,20 @@ export default function MenuRecommender() {
   const [chosen, setChosen] = useState(null);
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+
+  // 카카오톡 인앱 브라우저 감지
+  useEffect(() => {
+    const ua = navigator.userAgent || '';
+    if (/KAKAOTALK/i.test(ua)) {
+      if (/iPhone|iPad|iPod/i.test(ua)) {
+        // iOS 카톡: 안내 화면 표시
+        setIsKakaoIOS(true);
+      } else {
+        // 안드로이드 카톡: 외부 브라우저로 이동
+        window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(window.location.href);
+      }
+    }
+  }, []);
 
   const reset = () => {
     setStep(0);
@@ -229,6 +206,39 @@ export default function MenuRecommender() {
   const moodObj = MOODS.find((m) => m.id === mood);
   const sitObj = SITUATIONS.find((s) => s.id === situation);
 
+  // iOS 카카오톡 인앱 브라우저일 때 안내 화면
+  if (isKakaoIOS) {
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        background: "linear-gradient(165deg, #0F0F1A 0%, #1A1A2E 40%, #16213E 100%)",
+        fontFamily: "-apple-system, sans-serif", color: "#E8E8ED",
+        padding: 20, textAlign: "center",
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🍽️</div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>오늘 뭐 먹지?</h2>
+        <p style={{ fontSize: 14, color: "#888", marginBottom: 28, lineHeight: 1.6 }}>
+          카카오톡 브라우저에서는 일부 기능이 제한돼요.<br/>
+          아래 방법으로 Safari에서 열어주세요!
+        </p>
+        <div style={{
+          background: "rgba(255,255,255,0.06)", borderRadius: 16,
+          padding: "24px 20px", maxWidth: 320, width: "100%",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}>
+          <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: "#FF6B35" }}>
+            Safari로 여는 방법
+          </p>
+          <p style={{ fontSize: 14, color: "#bbb", lineHeight: 1.8, margin: 0 }}>
+            1. 오른쪽 하단 <span style={{ fontSize: 18 }}>⋯</span> 버튼 터치<br/>
+            2. "Safari로 열기" 선택
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       minHeight: "100vh",
@@ -268,12 +278,9 @@ export default function MenuRecommender() {
           100%{transform:translateY(120vh) rotate(720deg);opacity:0}
         }
         .mood-btn { transition: all 0.25s cubic-bezier(.4,0,.2,1); cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        
         .mood-btn:active { transform: translateY(0) scale(0.98); }
         .card-reveal { cursor: pointer; transition: all 0.35s cubic-bezier(.4,0,.2,1); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        
         .choose-btn { transition: all 0.2s ease; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        
         .choose-btn:active { transform: scale(0.96); }
         @media (hover: hover) {
           .mood-btn:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
@@ -448,12 +455,10 @@ export default function MenuRecommender() {
                 </div>
               </div>
             ) : chosen ? (
-              /* Final choice */
               <div style={{
                 textAlign: "center", padding: "30px 0",
                 animation: "bounceIn 0.5s ease-out",
               }}>
-                {/* Confetti */}
                 <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 10 }}>
                   {Array.from({ length: 24 }).map((_, i) => (
                     <div key={i} style={{
@@ -500,7 +505,6 @@ export default function MenuRecommender() {
                 }}>다시 추천받기</button>
               </div>
             ) : (
-              /* 3 cards */
               <div>
                 <h2 style={{
                   fontSize: 17, fontWeight: 700, textAlign: "center",
@@ -517,7 +521,7 @@ export default function MenuRecommender() {
                       }}>
                       {!revealed[i] ? (
                         <div style={{
-                          background: `linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))`,
+                          background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
                           border: "1px solid rgba(255,255,255,0.08)",
                           padding: "28px 20px",
                           display: "flex", alignItems: "center", justifyContent: "center",
