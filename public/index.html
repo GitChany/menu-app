@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>
+(function(){
+  var u = navigator.userAgent || navigator.vendor || '';
+  if (/KAKAOTALK/i.test(u)) {
+    if (/iPhone|iPad|iPod/i.test(u)) {
+      document.open();
+      document.write('<html><head><meta http-equiv="refresh" content="0;url=' + location.href + '"></head><body>Safari로 이동 중...</body></html>');
+      document.close();
+      location.replace('kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href));
+    } else {
+      location.replace('kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href));
+    }
+  }
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta property="og:title" content="오늘 뭐 먹지?">
