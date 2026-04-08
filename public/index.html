@@ -4,15 +4,27 @@
 <script>
 (function(){
   var u = navigator.userAgent || navigator.vendor || '';
-  if (/KAKAOTALK/i.test(u)) {
-    if (/iPhone|iPad|iPod/i.test(u)) {
-      document.open();
-      document.write('<html><head><meta http-equiv="refresh" content="0;url=' + location.href + '"></head><body>Safari로 이동 중...</body></html>');
-      document.close();
-      location.replace('kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href));
-    } else {
-      location.replace('kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href));
-    }
+  if (/KAKAOTALK/i.test(u) && /iPhone|iPad|iPod/i.test(u)) {
+    document.body.innerHTML = '';
+    document.write(
+      '<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">' +
+      '<style>*{margin:0;padding:0;box-sizing:border-box}body{min-height:100vh;background:#0F0F1A;' +
+      'font-family:-apple-system,sans-serif;color:#E8E8ED;display:flex;flex-direction:column;' +
+      'align-items:center;justify-content:center;text-align:center;padding:20px}</style></head><body>' +
+      '<div style="font-size:48px;margin-bottom:16px">🍽️</div>' +
+      '<h2 style="font-size:20px;font-weight:700;margin-bottom:8px">오늘 뭐 먹지?</h2>' +
+      '<p style="font-size:14px;color:#888;margin-bottom:28px;line-height:1.6">' +
+      '카카오톡 브라우저에서는 일부 기능이 제한돼요.<br>아래 방법으로 Safari에서 열어주세요!</p>' +
+      '<div style="background:rgba(255,255,255,0.06);border-radius:16px;padding:24px 20px;' +
+      'max-width:320px;width:100%;border:1px solid rgba(255,255,255,0.1)">' +
+      '<p style="font-size:15px;font-weight:600;margin-bottom:12px;color:#FF6B35">Safari로 여는 방법</p>' +
+      '<p style="font-size:14px;color:#bbb;line-height:1.8;margin:0">' +
+      '화면 하단 오른쪽<br><span style="font-size:22px">⋯</span> 버튼 터치<br>→ <b>"Safari로 열기"</b> 선택</p>' +
+      '</div></body></html>'
+    );
+    document.close();
+  } else if (/KAKAOTALK/i.test(u)) {
+    location.replace('kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href));
   }
 })();
 </script>
