@@ -397,7 +397,7 @@ function getRecommendations(mood, situation, count) {
     var items = (MENU_DB[cat] && MENU_DB[cat][mood]) ? MENU_DB[cat][mood] : [];
     for (var i = 0; i < items.length; i++) {
       var score = Math.random() * 10;
-      if (situation === 'alone' && (cat === 'fast' || cat === 'snack' || cat === 'korean')) score += 3;
+      if (situation === 'alone' && (cat === 'fast' || cat === 'snack' || cat === 'korean' || cat === 'chinese')) score += 3;
       if (situation === 'date' && (cat === 'japanese' || cat === 'western' || cat === 'cafe')) score += 4;
       if (situation === 'friends' && (cat === 'korean' || cat === 'chinese' || cat === 'fast')) score += 3;
       if (situation === 'family' && (cat === 'korean' || cat === 'chinese' || cat === 'japanese')) score += 3;
